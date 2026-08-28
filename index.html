@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة معلومات الطقس - Weather Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .search-box input {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            width: 300px;
+            font-size: 1em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .search-box button {
+            padding: 12px 30px;
+            background: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #667eea;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .search-box button:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .weather-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .main-weather {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .weather-info {
+            text-align: right;
+            direction: rtl;
+        }
+
+        .city-name {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .weather-description {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .temperature {
+            font-size: 3.5em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .weather-icon {
+            font-size: 5em;
+            text-align: center;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .detail-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 0.9em;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .forecast {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .forecast-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .forecast-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .forecast-day {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .forecast-icon {
+            font-size: 2.5em;
+            margin: 10px 0;
+        }
+
+        .forecast-temp {
+            font-size: 1.2em;
+        }
+
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading span {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 5px;
+            animation: bounce 1.4s infinite;
+        }
+
+        .loading span:nth-child(1) { animation-delay: 0s; }
+        .loading span:nth-child(2) { animation-delay: 0.2s; }
+        .loading span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .main-weather {
+                grid-template-columns: 1fr;
+            }
+
+            .weather-icon {
+                font-size: 3em;
+            }
+
+            .temperature {
+                font-size: 2.5em;
+            }
+
+            .search-box input {
+                width: 200px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌤️ لوحة معلومات الطقس</h1>
+            <p>احصل على معلومات الطقس الدقيقة لأي مدينة</p>
+        </div>
+
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="cityInput" 
+                placeholder="ابحث عن مدينة..."
+                onkeypress="handleKeyPress(event)"
+            >
+            <button onclick="searchWeather()">البحث</button>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div class="loading" id="loading">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div class="weather-card" id="weatherCard" style="display: none;">
+            <div class="main-weather">
+                <div class="weather-icon" id="weatherIcon">🌤️</div>
+                <div class="weather-info">
+                    <div class="city-name" id="cityName">---</div>
+                    <div class="weather-description" id="description">---</div>
+                    <div class="temperature" id="temperature">--°C</div>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <div class="detail-label">الرطوبة</div>
+                    <div class="detail-value" id="humidity">--%</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">سرعة الرياح</div>
+                    <div class="detail-value" id="windSpeed">-- m/s</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">الضغط</div>
+                    <div class="detail-value" id="pressure">-- hPa</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">الرؤية</div>
+                    <div class="detail-value" id="visibility">-- km</div>
+                </div>
+            </div>
+
+            <div class="weather-details">
+                <div class="info-card">
+                    <div class="info-label">درجة الحرارة الدنيا</div>
+                    <div class="info-value" id="minTemp">--°C</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">درجة الحرارة العليا</div>
+                    <div class="info-value" id="maxTemp">--°C</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">درجة الحرارة المشعورة</div>
+                    <div class="info-value" id="feelsLike">--°C</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">شروق الشمس</div>
+                    <div class="info-value" id="sunrise">--:--</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">غروب الشمس</div>
+                    <div class="info-value" id="sunset">--:--</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">معامل الأشعة فوق البنفسجية</div>
+                    <div class="info-value" id="uvIndex">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="weather-card" id="forecastCard" style="display: none;">
+            <h2 style="text-align: right; margin-bottom: 20px; color: #333;">توقعات الطقس</h2>
+            <div class="forecast" id="forecast"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'b6fd43b5a86f42c58d28316e9a6b3c4d'; // استخدم مفتاح API الخاص بك
+
+        async function searchWeather() {
+            const city = document.getElementById('cityInput').value.trim();
+            
+            if (!city) {
+                showError('الرجاء إدخال اسم مدينة');
+                return;
+            }
+
+            await fetchWeatherData(city);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                searchWeather();
+            }
+        }
+
+        async function fetchWeatherData(city) {
+            const loading = document.getElementById('loading');
+            const weatherCard = document.getElementById('weatherCard');
+            const forecastCard = document.getElementById('forecastCard');
+            const errorMsg = document.getElementById('errorMessage');
+
+            loading.style.display = 'flex';
+            weatherCard.style.display = 'none';
+            forecastCard.style.display = 'none';
+            errorMsg.style.display = 'none';
+
+            try {
+                // جلب بيانات الطقس الحالي
+                const currentResponse = await fetch(
+                    `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric&lang=ar`
+                );
+
+                if (!currentResponse.ok) {
+                    throw new Error('المدينة غير موجودة');
+                }
+
+                const currentData = await currentResponse.json();
+
+                // جلب التنبؤات
+                const forecastResponse = await fetch(
+                    `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric&lang=ar`
+                );
+
+                const forecastData = await forecastResponse.json();
+
+                updateWeatherUI(currentData);
+                updateForecastUI(forecastData);
+
+                weatherCard.style.display = 'block';
+                forecastCard.style.display = 'block';
+            } catch (error) {
+                showError(error.message || 'حدث خطأ في جلب بيانات الطقس');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function updateWeatherUI(data) {
+            const icons = {
+                '01d': '☀️', '01n': '🌙',
+                '02d': '⛅', '02n': '☁️',
+                '03d': '☁️', '03n': '☁️',
+                '04d': '☁️', '04n': '☁️',
+                '09d': '🌧️', '09n': '🌧️',
+                '10d': '🌦️', '10n': '🌧️',
+                '11d': '⛈️', '11n': '⛈️',
+                '13d': '❄️', '13n': '❄️',
+                '50d': '🌫️', '50n': '🌫️'
+            };
+
+            const icon = icons[data.weather[0].icon] || '🌤️';
+
+            document.getElementById('weatherIcon').textContent = icon;
+            document.getElementById('cityName').textContent = `${data.name}, ${data.sys.country}`;
+            document.getElementById('description').textContent = data.weather[0].description;
+            document.getElementById('temperature').textContent = Math.round(data.main.temp) + '°C';
+            document.getElementById('humidity').textContent = data.main.humidity + '%';
+            document.getElementById('windSpeed').textContent = data.wind.speed + ' m/s';
+            document.getElementById('pressure').textContent = data.main.pressure + ' hPa';
+            document.getElementById('visibility').textContent = (data.visibility / 1000).toFixed(1) + ' km';
+            document.getElementById('minTemp').textContent = Math.round(data.main.temp_min) + '°C';
+            document.getElementById('maxTemp').textContent = Math.round(data.main.temp_max) + '°C';
+            document.getElementById('feelsLike').textContent = Math.round(data.main.feels_like) + '°C';
+            document.getElementById('sunrise').textContent = new Date(data.sys.sunrise * 1000).toLocaleTimeString('ar-SA');
+            document.getElementById('sunset').textContent = new Date(data.sys.sunset * 1000).toLocaleTimeString('ar-SA');
+            document.getElementById('uvIndex').textContent = data.uvi ? data.uvi.toFixed(1) : 'N/A';
+        }
+
+        function updateForecastUI(data) {
+            const forecastContainer = document.getElementById('forecast');
+            forecastContainer.innerHTML = '';
+
+            const icons = {
+                '01d': '☀️', '01n': '🌙',
+                '02d': '⛅', '02n': '☁️',
+                '03d': '☁️', '03n': '☁️',
+                '04d': '☁️', '04n': '☁️',
+                '09d': '🌧️', '09n': '🌧️',
+                '10d': '🌦️', '10n': '🌧️',
+                '11d': '⛈️', '11n': '⛈️',
+                '13d': '❄️', '13n': '❄️',
+                '50d': '🌫️', '50n': '🌫️'
+            };
+
+            const dailyForecasts = {};
+
+            data.list.forEach(forecast => {
+                const date = new Date(forecast.dt * 1000);
+                const day = date.toLocaleDateString('ar-SA', { weekday: 'long' });
+
+                if (!dailyForecasts[day]) {
+                    dailyForecasts[day] = forecast;
+                }
+            });
+
+            Object.entries(dailyForecasts).slice(0, 5).forEach(([day, forecast]) => {
+                const icon = icons[forecast.weather[0].icon] || '🌤️';
+                const temp = Math.round(forecast.main.temp);
+
+                const forecastItem = document.createElement('div');
+                forecastItem.className = 'forecast-item';
+                forecastItem.innerHTML = `
+                    <div class="forecast-day">${day}</div>
+                    <div class="forecast-icon">${icon}</div>
+                    <div class="forecast-temp">${temp}°C</div>
+                    <div style="font-size: 0.9em; margin-top: 5px;">${forecast.weather[0].description}</div>
+                `;
+                forecastContainer.appendChild(forecastItem);
+            });
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.textContent = '❌ ' + message;
+            errorMsg.style.display = 'block';
+        }
+
+        // تحميل الطقس للمدينة الافتراضية عند فتح الصفحة
+        window.addEventListener('load', () => {
+            fetchWeatherData('Cairo');
+        });
+    </script>
+</body>
+</html>
